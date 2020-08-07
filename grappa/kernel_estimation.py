@@ -1,5 +1,8 @@
 import numpy as np
 
+from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions
+
+
 def kernel_estimation(kspace, mask=None, af=4, ny=3):
     """GRAPPA kernel estimation
 
@@ -19,7 +22,7 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3):
     return grappa_kernels
 
 def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15):
-    targets = _cartesian_product(
+    targets = cartesian_product(
         # readout dimension
         np.arange(ny // 2, ac.shape[1] - ny + (ny // 2)),
         # phase dimension
@@ -32,20 +35,14 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15):
     target_values = np.array(target_values)
     # to refactor: for a given target position we always know the source
     # positions. This will be used for application.
-    sources = list()
-    for sc in range(ncoils):
-        for delta_si in range(-(ny//2), ny//2 + 1):
-            for delta_sj in [-(i_geom+1), n_geometries - i_geom]:
-                source = targets + np.array([delta_si, delta_sj])
-                source = np.concatenate([
-                    np.ones((targets.shape[0], 1), dtype=int) * sc,
-                    source
-                ], axis=-1)
-                sources.append(source)
-    source_values = [
-        np.take(ac, np.ravel_multi_index(source.T, ac.shape))
-        for source in sources
-    ]
+    sources = sources_from_targets(
+        targets,
+        i_geom,
+        n_geometries,
+        ny,
+        ncoils,
+    )
+    source_values = eval_at_positions(ac, sources)
     source_values = np.array(source_values)
     inverted_sources = np.linalg.pinv(source_values)
     grappa_kernel = target_values @ inverted_sources
@@ -69,12 +66,3 @@ def _number_geometries(mask):
     second_1 = sampled_lines[1]
     n_geometries = second_1 - first_1 - 1
     return n_geometries
-
-def _cartesian_product(*arrays):
-    # taken from https://stackoverflow.com/a/11146645/4332585
-    la = len(arrays)
-    dtype = np.result_type(*arrays)
-    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
-    for i, a in enumerate(np.ix_(*arrays)):
-        arr[...,i] = a
-    return arr.reshape(-1, la)
