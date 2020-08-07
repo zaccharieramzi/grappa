@@ -29,3 +29,13 @@ def eval_at_positions(values, indices_list):
     ]
     evaluations = np.array(evaluations)
     return evaluations
+
+def number_geometries(mask):
+    # the number of geometries basically corresponds to the spacing between
+    # the sampled lines out of the autocalibration area.
+    # get the number of geometries
+    sampled_lines = np.where(np.squeeze(mask))[0]
+    first_1 = sampled_lines[0]
+    second_1 = sampled_lines[1]
+    n_geometries = second_1 - first_1 - 1
+    return n_geometries

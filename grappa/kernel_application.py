@@ -1,6 +1,6 @@
 import numpy as np
 
-from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions
+from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
 def apply_kernel(kspace, mask, grappa_kernels):
@@ -8,7 +8,8 @@ def apply_kernel(kspace, mask, grappa_kernels):
         raise ValueError('For now mask has to be passed for kernel estimation')
     ncoils = kspace.shape[0]
     ny = grappa_kernels[0].shape[1] // (ncoils * 2)
-    pad_right, pad_left = _padding_for_kspace(mask)
+    spacing = number_geometries(mask)
+    pad_right, pad_left = _padding_for_kspace(mask, spacing)
     kspace_padded = np.pad(
         kspace,
         [
@@ -18,7 +19,17 @@ def apply_kernel(kspace, mask, grappa_kernels):
         ]
     )
     for i_geom, grappa_kernel in enumerate(grappa_kernels):
-        _geom_apply_kernel()
+        _geom_apply_kernel(
+            kspace_padded,
+            grappa_kernel,
+            i_geom,
+            spacing,
+            ny,
+            ncoils,
+        )
+    crop_right = mask.size - pad_right
+    kspace_cropped = kspace_padded[:, ny//2:-(ny//2), pad_left:crop_right]
+    return kspace_cropped
 
 def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15):
     targets = cartesian_product(
@@ -46,14 +57,11 @@ def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15
 
 
 
-def _padding_for_kspace(mask):
+def _padding_for_kspace(mask, spacing):
     sampled_lines = np.where(np.squeeze(mask))[0]
     first_1 = sampled_lines[0]
-    second_1 = sampled_lines[1]
     last_1 = sampled_lines[-1]
     n_phase = mask.size
-
-    spacing = second_1 - first_1 - 1
 
     if first_1 == 0:
         pad_left = 0

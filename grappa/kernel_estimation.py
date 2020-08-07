@@ -1,6 +1,6 @@
 import numpy as np
 
-from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions
+from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
 def kernel_estimation(kspace, mask=None, af=4, ny=3):
@@ -13,7 +13,7 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3):
     if mask is None:
         raise ValueError('For now mask has to be passed for kernel estimation')
     ac = _autocalibration_signal(kspace, mask, af)
-    n_geometries = _number_geometries(mask)
+    n_geometries = number_geometries(mask)
     ncoils = kspace.shape[0]
     grappa_kernels = [
         _geometry_kernel_estimation(ac, i_geom, ny, n_geometries, ncoils)
@@ -56,13 +56,3 @@ def _autocalibration_signal(kspace, mask, af=4):
     ac_slice = slice(ac_center - num_low_freqs//2, ac_center + num_low_freqs//2)
     ac = kspace[..., ac_slice]
     return ac
-
-def _number_geometries(mask):
-    # the number of geometries basically corresponds to the spacing between
-    # the sampled lines out of the autocalibration area.
-    # get the number of geometries
-    sampled_lines = np.where(np.squeeze(mask))[0]
-    first_1 = sampled_lines[0]
-    second_1 = sampled_lines[1]
-    n_geometries = second_1 - first_1 - 1
-    return n_geometries
