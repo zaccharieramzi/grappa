@@ -29,7 +29,8 @@ def apply_kernel(kspace, mask, grappa_kernels):
         )
     crop_right = mask.size - pad_right
     kspace_cropped = kspace_padded[:, ny//2:-(ny//2), pad_left:crop_right]
-    return kspace_cropped
+    kspace_consistent = mask * kspace + (1-mask) * kspace_cropped
+    return kspace_consistent
 
 def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15):
     targets = cartesian_product(
