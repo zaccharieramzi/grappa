@@ -24,7 +24,7 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3):
 def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15):
     targets = cartesian_product(
         # readout dimension
-        np.arange(ny // 2, ac.shape[1] - ny + (ny // 2)),
+        np.arange(ny // 2, ac.shape[1] - ny + (ny // 2) + 1),
         # phase dimension
         np.arange(i_geom + 1, ac.shape[2] - n_geometries + i_geom),
     )
