@@ -28,7 +28,17 @@ from grappa.kernel_estimation import _geometry_kernel_estimation
         ],
         3,
         [[0, 0, 1, 1, 0, 0]],
-    )
+    ),
+    (  # third example to test the complex part of kernel estimation
+        [
+            [1, 1 + 1j, 1],
+            [2, 2 + 2j, 2],
+            [3, 3 + 3j, 3],
+            [7, 7 - 5j, -5],
+        ],
+        1,
+        [[1, 1j]],
+    ),
 ])
 def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
     ac = np.array(ac)[None, :]
