@@ -4,24 +4,39 @@ import pytest
 from grappa.kernel_estimation import _geometry_kernel_estimation
 
 
-@pytest.mark.parametrize('ac, expected_kernel',[
-    (
+@pytest.mark.parametrize('ac, ny, expected_kernel',[
+    (  # first basic example with a kernel using only the 2 direct neighbours
         [
             [1, 2, 1],
             [2, 4, 2],
             [3, 6, 3],
             [7, 2, -5],
         ],
+        1,
         [[1]*2],
+    ),
+    (
+        [
+            [1, 2, 1],
+            [2, 4, 2],
+            [3, 6, 3],
+            [7, 2, -5],
+            [0.1, 1.1, 1],
+            [3.1, 5.1, 2],
+            [3.1, 12.1, 9],
+            [7.1, 3.1, -4],
+        ],
+        3,
+        [[0, 0, 1, 1, 0, 0]],
     )
 ])
-def test_geometry_kernel_estimation(ac, expected_kernel):
+def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
     ac = np.array(ac)[None, :]
     expected_kernel = np.array(expected_kernel)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=0,
-        ny=1,
+        ny=ny,
         n_geometries=1,
         ncoils=1,
     )
