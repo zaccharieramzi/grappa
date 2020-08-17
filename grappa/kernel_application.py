@@ -34,6 +34,26 @@ def apply_kernel(kspace, mask, grappa_kernels):
     return kspace_consistent
 
 def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15):
+    targets, sources = list_targets_sources_for_application(
+        kspace=kspace,
+        ny=ny,
+        i_geom=i_geom,
+        spacing=spacing,
+        ncoils=ncoils,
+    )
+    source_values = eval_at_positions(kspace, sources)
+    target_values = grappa_kernel @ source_values
+    inference_on_target_positions(kspace, targets, target_values, ncoils=ncoils)
+
+def inference_on_target_positions(kspace, targets, target_values, ncoils):
+    for c in range(ncoils):
+        np.put(
+            kspace[c],
+            np.ravel_multi_index(targets.T, kspace[c].shape),
+            target_values[c],
+        )
+
+def list_targets_sources_for_application(kspace, ny, i_geom, spacing, ncoils):
     targets = cartesian_product(
         # readout dimension
         np.arange(ny // 2, kspace.shape[1] - ny + (ny // 2) + 1),
@@ -48,15 +68,7 @@ def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15
         ny,
         ncoils,
     )
-    source_values = eval_at_positions(kspace, sources)
-    target_values = grappa_kernel @ source_values
-    for c in range(ncoils):
-        np.put(
-            kspace[c],
-            np.ravel_multi_index(targets.T, kspace[c].shape),
-            target_values[c],
-        )
-
+    return targets, sources
 
 
 def padding_for_kspace(mask, spacing):
