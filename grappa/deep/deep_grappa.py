@@ -20,7 +20,8 @@ class DeepGRAPPA:
         n_geometries = number_geometries(mask)
         ncoils = kspace.shape[0]
         self.models = [
-            self.model_init_function(**self.model_kwargs) for _ in range(n_geometries)
+            self.model_init_function(ncoils=ncoils, **self.model_kwargs)
+            for _ in range(n_geometries)
         ]
         for i_geom, model in enumerate(self.models):
             target_values, source_values = list_target_source_values_for_estimation(
@@ -31,7 +32,7 @@ class DeepGRAPPA:
                 ncoils=ncoils,
             )
             model.compile(loss='mse', optimizer=Adam(lr=1e-3))
-            model.fit(x=source_values, y=target_values, n_epochs=self.n_epochs)
+            model.fit(x=source_values.T, y=target_values.T, epochs=self.n_epochs)
 
     def apply_models(self, kspace, mask):
         ncoils = kspace.shape[0]
@@ -54,7 +55,7 @@ class DeepGRAPPA:
                 ncoils=ncoils,
             )
             source_values = eval_at_positions(kspace_padded, sources)
-            target_values = model.predict(source_values)
+            target_values = model.predict(source_values.T).T
             inference_on_target_positions(kspace_padded, targets, target_values, ncoils=ncoils)
         crop_right_readout = kspace_padded.shape[-1] - pad_right
         crop_right_phase = kspace_padded.shape[-2] - (self.ny//2)
