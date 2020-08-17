@@ -9,7 +9,7 @@ def apply_kernel(kspace, mask, grappa_kernels):
     ncoils = kspace.shape[0]
     ny = grappa_kernels[0].shape[1] // (ncoils * 2)
     spacing = number_geometries(mask)
-    pad_right, pad_left = _padding_for_kspace(mask, spacing)
+    pad_right, pad_left = padding_for_kspace(mask, spacing)
     kspace_padded = np.pad(
         kspace,
         [
@@ -59,7 +59,7 @@ def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15
 
 
 
-def _padding_for_kspace(mask, spacing):
+def padding_for_kspace(mask, spacing):
     sampled_lines = np.where(np.squeeze(mask))[0]
     first_1 = sampled_lines[0]
     last_1 = sampled_lines[-1]
