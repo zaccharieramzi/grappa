@@ -35,7 +35,7 @@ def apply_kernel(kspace, mask, grappa_kernels):
 def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15):
     targets = cartesian_product(
         # readout dimension
-        np.arange(ny // 2, kspace.shape[1] - ny + (ny // 2)),
+        np.arange(ny // 2, kspace.shape[1] - ny + (ny // 2) + 1),
         # phase dimension
         # 1 is for the first dimension
         np.arange(i_geom + 1, kspace.shape[2] - spacing + i_geom, spacing+1),
