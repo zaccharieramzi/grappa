@@ -1,4 +1,6 @@
 # GRAPPA
+[![Build Status](https://travis-ci.com/zaccharieramzi/grappa.svg?token=wHL4tmyGD3TP6bSo6Mdh&branch=master)](https://travis-ci.com/zaccharieramzi/grappa)
+
 A repository to experiment on GRAPPA, in particular how to apply it in TF
 
 
