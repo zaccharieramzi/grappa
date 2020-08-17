@@ -8,11 +8,12 @@ from grappa.utils import number_geometries, eval_at_positions
 
 
 class DeepGRAPPA:
-    def __init__(self, model_init_function, ny=3, n_epochs=10, **model_kwargs):
+    def __init__(self, model_init_function, ny=3, n_epochs=10, lr=1e-3, **model_kwargs):
         self.model_init_function = model_init_function
         self.model_kwargs = model_kwargs
         self.ny = ny
         self.n_epochs = n_epochs
+        self.lr = lr
         self.models = None
 
     def calibrate_models(self, kspace, mask=None, af=4):
@@ -31,7 +32,7 @@ class DeepGRAPPA:
                 n_geometries=n_geometries,
                 ncoils=ncoils,
             )
-            model.compile(loss='mse', optimizer=Adam(lr=1e-3))
+            model.compile(loss='mse', optimizer=Adam(lr=self.lr))
             model.fit(x=source_values.T, y=target_values.T, epochs=self.n_epochs)
 
     def apply_models(self, kspace, mask):
