@@ -27,8 +27,9 @@ def apply_kernel(kspace, mask, grappa_kernels):
             ny,
             ncoils,
         )
-    crop_right = kspace_padded.shape[-1] - pad_right
-    kspace_cropped = kspace_padded[:, ny//2:-(ny//2), pad_left:crop_right]
+    crop_right_readout = kspace_padded.shape[-1] - pad_right
+    crop_right_phase = kspace_padded.shape[-2] - (ny//2)
+    kspace_cropped = kspace_padded[:, ny//2:crop_right_phase, pad_left:crop_right_readout]
     kspace_consistent = mask * kspace + (1-mask) * kspace_cropped
     return kspace_consistent
 
