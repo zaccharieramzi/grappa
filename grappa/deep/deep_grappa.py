@@ -3,17 +3,26 @@ from tensorflow.keras.optimizers import Adam
 
 from grappa.kernel_application import padding_for_kspace, list_targets_sources_for_application, inference_on_target_positions
 from grappa.kernel_estimation import autocalibration_signal, list_target_source_values_for_estimation
-from grappa.reconstruction import ifft2, crop, rss
-from grappa.utils import number_geometries, eval_at_positions
+from grappa.reconstruction import crop, rss
+from grappa.utils import number_geometries, eval_at_positions, cartesian_product
 
 
 class DeepGRAPPA:
-    def __init__(self, model_init_function, ny=3, n_epochs=10, lr=1e-3, **model_kwargs):
+    def __init__(
+            self,
+            model_init_function,
+            ny=3,
+            n_epochs=10,
+            lr=1e-3,
+            distance_from_center_feat=False,
+            **model_kwargs,
+        ):
         self.model_init_function = model_init_function
         self.model_kwargs = model_kwargs
         self.ny = ny
         self.n_epochs = n_epochs
         self.lr = lr
+        self.distance_from_center_feat = distance_from_center_feat
         self.models = None
 
     def calibrate_models(self, kspace, mask=None, af=4):
@@ -34,6 +43,17 @@ class DeepGRAPPA:
             )
             model.compile(loss='mse', optimizer=Adam(lr=self.lr))
             model.fit(x=source_values.T, y=target_values.T, epochs=self.n_epochs)
+
+    def _list_targets_distances_from_center(self, ac, n_geometries, i_geom):
+        targets = cartesian_product(
+            # readout dimension
+            np.arange(self.ny // 2, ac.shape[1] - self.ny + (self.ny // 2) + 1),
+            # phase dimension
+            np.arange(i_geom + 1, ac.shape[2] - n_geometries + i_geom),
+        )
+        target_patch_shape = np.array(ac.shape[1:3]) - np.array(self.ny, n_geometries)
+        targets_offset = np.linalg.norm(targets - target_patch_shape / 2, axis=1)
+        return targets_offset
 
     def apply_models(self, kspace, mask):
         ncoils = kspace.shape[0]
