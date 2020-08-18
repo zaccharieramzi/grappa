@@ -54,5 +54,7 @@ def test_linear_deep_grappa(monkeypatch, kspace, ny, expected_kernel):
     kspace = np.array(kspace)[None, :]
     expected_kernel = np.array(expected_kernel)
     linear_deep_grappa.calibrate_models(kspace)
-    deep_weights = linear_deep_grappa.models[0].get_weights()[0]
+    underlying_model = linear_deep_grappa.models[0].layers[0]
+    deep_weights = underlying_model.denses['real'].get_weights()[0].astype(np.complex64)
+    deep_weights += 1j * underlying_model.denses['imag'].get_weights()[0]
     np.testing.assert_array_almost_equal(expected_kernel, deep_weights.T, decimal=1)
