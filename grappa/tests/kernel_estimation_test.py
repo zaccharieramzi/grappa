@@ -49,8 +49,9 @@ def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
         ny=ny,
         n_geometries=1,
         ncoils=1,
+        lamda=1e-8,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
 
 @pytest.mark.parametrize('ac, ny, i_geom, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct sampled neighbours
@@ -100,8 +101,9 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
         ny=ny,
         n_geometries=2,
         ncoils=1,
+        lamda=1e-8,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
 
 @pytest.mark.parametrize('ac, ny, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct neighbours
@@ -114,10 +116,10 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
                 [7, 2, -5],
             ],
             [
-                [0.001, -2, 0],
-                [0.004, -4, 0],
-                [-0.001, -6, 0],
-                [0.002, -2, 0],
+                [0.001, -2, 0.0001],
+                [0.004, -4, 0.002],
+                [-0.001, -6, 0.0002],
+                [0.002, -2, 0.001],
             ],
         ],
         1,
@@ -136,18 +138,22 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
                 [7.1, 3.1, -4],
                 [8, 3.5, -4.5],
                 [18, 12, -6],
+                [-3, 2, 5],
+                [-4.2, 9, 13.2],
             ],
             [
-                [0.001, -2, 0],
-                [0.002, -4, 0],
-                [0.0001, -6, 0],
-                [-0.001, -2, 0],
-                [0.0003, -1.1, 0],
-                [0.0005, -5.1, 0],
-                [-0.002, -12.1, 0],
-                [0.0007, -3.1, 0],
-                [0.0002, -3.5, 0],
-                [0.0004, -12, 0],
+                [0.01, -2, 0.0012],
+                [0.02, -4, 0.0012],
+                [0.001, -6, 0.0011],
+                [-0.01, -2, 0.0013],
+                [0.003, -1.1, 0.0014],
+                [0.005, -5.1, 0.0013],
+                [-0.02, -12.1, 0.0019],
+                [0.007, -3.1, 0.0013],
+                [0.002, -3.5, 0.001],
+                [0.004, -12, 0.001],
+                [0.00036, -2, 0.003],
+                [-0.002, -9, -0.003],
             ],
         ],
         3,
@@ -166,6 +172,7 @@ def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel):
         ny=ny,
         n_geometries=1,
         ncoils=2,
+        lamda=1e-6,
     )
     np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=3)
 
