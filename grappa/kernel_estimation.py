@@ -3,7 +3,7 @@ import numpy as np
 from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
-def kernel_estimation(kspace, mask=None, af=4, ny=3):
+def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6):
     """GRAPPA kernel estimation
 
     Arguments:
@@ -16,12 +16,12 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3):
     n_geometries = number_geometries(mask)
     ncoils = kspace.shape[0]
     grappa_kernels = [
-        _geometry_kernel_estimation(ac, i_geom, ny, n_geometries, ncoils)
+        _geometry_kernel_estimation(ac, i_geom, ny, n_geometries, ncoils, lamda=lamda)
         for i_geom in range(n_geometries)
     ]
     return grappa_kernels
 
-def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15):
+def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lamda=1e-6):
     targets = cartesian_product(
         # readout dimension
         np.arange(ny // 2, ac.shape[1] - ny + (ny // 2) + 1),
@@ -44,8 +44,15 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15):
     )
     source_values = eval_at_positions(ac, sources)
     source_values = np.array(source_values)
-    inverted_sources = np.linalg.pinv(source_values)
-    grappa_kernel = target_values @ inverted_sources
+    # taken from
+    # https://github.com/mckib2/pygrappa/blob/master/pygrappa/grappa.py#L209
+    ShS = source_values.conj() @ source_values.T
+    ShT = source_values.conj() @ target_values.T
+    lamda0 = lamda*np.linalg.norm(ShS)/ShS.shape[0]
+    # old and simple way to perform kernel estimation
+    # inverted_sources = np.linalg.pinv(source_values)
+    # grappa_kernel = target @ inverted_sources
+    grappa_kernel = np.linalg.solve(ShS + + lamda0*np.eye(ShS.shape[0]), ShT).T
     return grappa_kernel
 
 
