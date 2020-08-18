@@ -39,7 +39,6 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     # grappa_kernel = target @ inverted_sources
     grappa_kernel = np.linalg.solve(ShS + + lamda0*np.eye(ShS.shape[0]), ShT).T
     return grappa_kernel
-    return grappa_kernel
 
 def list_target_source_values_for_estimation(ac, i_geom, ny, n_geometries, ncoils):
     targets = cartesian_product(
