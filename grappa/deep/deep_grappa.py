@@ -41,17 +41,31 @@ class DeepGRAPPA:
                 n_geometries=n_geometries,
                 ncoils=ncoils,
             )
+            if self.distance_from_center_feat:
+                distance = self._list_targets_distances_from_center(
+                    ac,
+                    n_geometries,
+                    i_geom,
+                    mode='calib',
+                )
+                X = np.concatenate([source_values, distance])
+            else:
+                X = source_values
             model.compile(loss='mse', optimizer=Adam(lr=self.lr))
-            model.fit(x=source_values.T, y=target_values.T, epochs=self.n_epochs)
+            model.fit(x=X.T, y=target_values.T, epochs=self.n_epochs)
 
-    def _list_targets_distances_from_center(self, ac, n_geometries, i_geom):
+    def _list_targets_distances_from_center(self, kspace, n_geometries, i_geom, mode='calib'):
+        if mode == 'calib':
+            delta_phase = 1
+        else:
+            delta_phase = n_geometries + 1
         targets = cartesian_product(
             # readout dimension
-            np.arange(self.ny // 2, ac.shape[1] - self.ny + (self.ny // 2) + 1),
+            np.arange(self.ny // 2, kspace.shape[1] - self.ny + (self.ny // 2) + 1),
             # phase dimension
-            np.arange(i_geom + 1, ac.shape[2] - n_geometries + i_geom),
+            np.arange(i_geom + 1, kspace.shape[2] - n_geometries + i_geom, delta_phase),
         )
-        target_patch_shape = np.array(ac.shape[1:3]) - np.array(self.ny, n_geometries)
+        target_patch_shape = np.array(kspace.shape[1:3]) - np.array(self.ny, n_geometries)
         targets_offset = np.linalg.norm(targets - target_patch_shape / 2, axis=1)
         return targets_offset
 
@@ -76,7 +90,17 @@ class DeepGRAPPA:
                 ncoils=ncoils,
             )
             source_values = eval_at_positions(kspace_padded, sources)
-            target_values = model.predict(source_values.T).T
+            if self.distance_from_center_feat:
+                distance = self._list_targets_distances_from_center(
+                    kspace,
+                    spacing,
+                    i_geom,
+                    mode='inference',
+                )
+                X = np.concatenate([source_values, distance])
+            else:
+                X = source_values
+            target_values = model.predict(X.T).T
             inference_on_target_positions(kspace_padded, targets, target_values, ncoils=ncoils)
         crop_right_readout = kspace_padded.shape[-1] - pad_right
         crop_right_phase = kspace_padded.shape[-2] - (self.ny//2)
