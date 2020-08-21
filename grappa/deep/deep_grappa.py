@@ -1,7 +1,10 @@
 from pathlib import Path
+import time
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.losses import mean_squared_error
 from tensorflow.keras.optimizers import Adam
 from tensorflow_addons.callbacks import TQDMProgressBar
 
@@ -11,6 +14,11 @@ from grappa.kernel_estimation import autocalibration_signal, list_target_source_
 from grappa.reconstruction import crop, rss
 from grappa.utils import number_geometries, eval_at_positions, cartesian_product
 
+
+def complex_mse(y_true, y_pred):
+    real_mse = mean_squared_error(tf.math.real(y_true), tf.math.real(y_pred))
+    imag_mse = mean_squared_error(tf.math.imag(y_true), tf.math.imag(y_pred))
+    return real_mse + imag_mse
 
 class DeepGRAPPA:
     def __init__(
@@ -60,7 +68,7 @@ class DeepGRAPPA:
                 X = np.concatenate([source_values, distance])
             else:
                 X = source_values
-            model.compile(loss='mse', optimizer=Adam(lr=self.lr))
+            model.compile(loss=complex_mse, optimizer=Adam(lr=self.lr))
             callbacks = []
             if self.verbose:
                 tqdm_cback = TQDMProgressBar()
