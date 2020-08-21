@@ -80,11 +80,13 @@ class DeepGRAPPA:
                     write_graph=False,
                     write_images=False,
                 )
+                callbacks.append(tboard_cback)
             model.fit(
                 x=X.T,
                 y=target_values.T,
                 epochs=self.n_epochs,
                 verbose=0,
+                callbacks=callbacks,
             )
 
     def _list_targets_distances_from_center(self, kspace, n_geometries, i_geom, mode='calib'):
