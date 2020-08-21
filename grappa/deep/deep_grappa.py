@@ -1,6 +1,11 @@
-import numpy as np
-from tensorflow.keras.optimizers import Adam
+from pathlib import Path
 
+import numpy as np
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.optimizers import Adam
+from tensorflow_addons.callbacks import TQDMProgressBar
+
+from grappa.config import LOG_DIR
 from grappa.kernel_application import padding_for_kspace, list_targets_sources_for_application, inference_on_target_positions
 from grappa.kernel_estimation import autocalibration_signal, list_target_source_values_for_estimation
 from grappa.reconstruction import crop, rss
@@ -15,6 +20,8 @@ class DeepGRAPPA:
             n_epochs=10,
             lr=1e-3,
             distance_from_center_feat=False,
+            verbose=0,
+            logging_history=False,
             **model_kwargs,
         ):
         self.model_init_function = model_init_function
@@ -23,6 +30,8 @@ class DeepGRAPPA:
         self.n_epochs = n_epochs
         self.lr = lr
         self.distance_from_center_feat = distance_from_center_feat
+        self.verbose = verbose
+        self.logging_history = logging_history
         self.models = None
 
     def calibrate_models(self, kspace, mask=None, af=4):
@@ -52,7 +61,31 @@ class DeepGRAPPA:
             else:
                 X = source_values
             model.compile(loss='mse', optimizer=Adam(lr=self.lr))
-            model.fit(x=X.T, y=target_values.T, epochs=self.n_epochs)
+            callbacks = []
+            if self.verbose:
+                tqdm_cback = TQDMProgressBar()
+                callbacks.append(tqdm_cback)
+            if self.logging_history:
+                additional_info = ''
+                if self.ny != 3:
+                    additional_info += f'ny{self.ny}_'
+                if self.distance_from_center_feat:
+                    additional_info += 'distance_'
+                run_id = f'deep_grappa_{model.name}_i{i_geom}_{additional_info}{int(time.time())}'
+                log_dir = Path(LOG_DIR) / 'logs' / run_id
+                tboard_cback = TensorBoard(
+                    profile_batch=0,
+                    log_dir=log_dir,
+                    histogram_freq=0,
+                    write_graph=False,
+                    write_images=False,
+                )
+            model.fit(
+                x=X.T,
+                y=target_values.T,
+                epochs=self.n_epochs,
+                verbose=0,
+            )
 
     def _list_targets_distances_from_center(self, kspace, n_geometries, i_geom, mode='calib'):
         if mode == 'calib':
