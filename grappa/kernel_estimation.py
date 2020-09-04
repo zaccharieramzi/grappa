@@ -45,14 +45,10 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     source_values = eval_at_positions(ac, sources)
     source_values = np.array(source_values)
     # taken from
-    # https://github.com/mckib2/pygrappa/blob/master/pygrappa/grappa.py#L209
-    ShS = source_values.conj() @ source_values.T
-    ShT = source_values.conj() @ target_values.T
-    lamda0 = lamda*np.linalg.norm(ShS)/ShS.shape[0]
-    # old and simple way to perform kernel estimation
-    # inverted_sources = np.linalg.pinv(source_values)
-    # grappa_kernel = target @ inverted_sources
-    grappa_kernel = np.linalg.solve(ShS + + lamda0*np.eye(ShS.shape[0]), ShT).T
+    # https://users.fmrib.ox.ac.uk/~mchiew/Teaching.html
+    regularizer = lamda*np.linalg.norm(source_values)*np.eye(source_values.shape[0])
+    regualrized_inverted_sources = np.linalg.pinv(source_values @ source_values.conj().T + regularizer)
+    grappa_kernel = target_values @ source_values.conj().T @ regualrized_inverted_sources
     return grappa_kernel
 
 
