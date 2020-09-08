@@ -65,7 +65,7 @@ class DeepGRAPPA:
                     i_geom,
                     mode='calib',
                 )
-                X = np.concatenate([source_values, distance])
+                X = np.concatenate([source_values, distance[None]])
             else:
                 X = source_values
             model.compile(loss=complex_mse, optimizer=Adam(lr=self.lr))
@@ -108,7 +108,7 @@ class DeepGRAPPA:
             # phase dimension
             np.arange(i_geom + 1, kspace.shape[2] - n_geometries + i_geom, delta_phase),
         )
-        target_patch_shape = np.array(kspace.shape[1:3]) - np.array(self.ny, n_geometries)
+        target_patch_shape = np.array(kspace.shape[1:3]) - np.array([self.ny, n_geometries])
         targets_offset = np.linalg.norm(targets - target_patch_shape / 2, axis=1)
         return targets_offset
 
@@ -135,12 +135,12 @@ class DeepGRAPPA:
             source_values = eval_at_positions(kspace_padded, sources)
             if self.distance_from_center_feat:
                 distance = self._list_targets_distances_from_center(
-                    kspace,
+                    kspace_padded,
                     spacing,
                     i_geom,
                     mode='inference',
                 )
-                X = np.concatenate([source_values, distance])
+                X = np.concatenate([source_values, distance[None]])
             else:
                 X = source_values
             target_values = model.predict(X.T).T
