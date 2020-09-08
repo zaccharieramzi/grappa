@@ -92,6 +92,7 @@ class DeepGRAPPA:
             model.fit(
                 x=X.T,
                 y=target_values.T,
+                batch_size=len(X.T),
                 epochs=self.n_epochs,
                 verbose=0,
                 callbacks=callbacks,
