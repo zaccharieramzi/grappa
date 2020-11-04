@@ -29,7 +29,7 @@ def test_model(model_fun, model_kwargs, n_samples=50, **kwargs):
     print(model_fun.__name__)
     print(model_kwargs)
     print(m)
-    return m
+    return METRIC_FUNCS, m
 
 
 def deep_grappa_model(ncoils=15, n_dense=2):
