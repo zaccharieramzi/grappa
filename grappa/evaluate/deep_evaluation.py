@@ -7,20 +7,27 @@ from tqdm import tqdm
 
 from grappa.deep.deep_grappa import DeepGRAPPA
 
+def test_model(deep_grappa, n_samples=50):
+    ds = CartesianFastMRIDatasetBuilder(
+        dataset='val',
+        af=4,
+        mask_mode='equidistant',
+        multicoil=True,
+        slice_random=False,
+        prefetch=True,
+        contrast='CORPD_FBK',
+        repeat=False,
+        n_samples=n_samples,
+        scale_factor=1e6,
+    )
+    m = Metrics(METRIC_FUNCS)
 
-n_samples = 50
-ds = CartesianFastMRIDatasetBuilder(
-    dataset='val',
-    af=4,
-    mask_mode='equidistant',
-    multicoil=True,
-    slice_random=False,
-    prefetch=True,
-    contrast='CORPD_FBK',
-    repeat=False,
-    n_samples=n_samples,
-    scale_factor=1e6,
-)
+    for (kspace, mask, _), image in tqdm(ds.preprocessed_ds.as_numpy_iterator(), total=n_samples):
+        image_pred = deep_grappa.reconstruct(kspace[..., 0], mask)
+        m.push(image[..., 0], image_pred)
+
+    return m
+
 
 def deep_grappa_model(ncoils=15, n_dense=2):
     dense_layers = [
@@ -33,25 +40,21 @@ def deep_grappa_model(ncoils=15, n_dense=2):
     model = Sequential(dense_layers)
     return model
 
-params = [
-    ('non_linear_distance', {'n_dense': 2, 'distance_from_center_feat': True}),
-    ('non_linear', {'n_dense': 2, 'distance_from_center_feat': False}),
-    ('linear', {'n_dense': 1}),
-    ('deep_distance', {'n_dense': 3, 'distance_from_center_feat': True}),
-    ('deep', {'n_dense': 3, 'distance_from_center_feat': False}),
-]
+if __name__ == '__main__':
+    metrics = dict()
+    params = [
+        ('non_linear_distance', {'n_dense': 2, 'distance_from_center_feat': True}),
+        ('non_linear', {'n_dense': 2, 'distance_from_center_feat': False}),
+        ('linear', {'n_dense': 1}),
+        ('deep_distance', {'n_dense': 3, 'distance_from_center_feat': True}),
+        ('deep', {'n_dense': 3, 'distance_from_center_feat': False}),
+    ]
 
-metrics = dict()
+    for name, param in params:
+        deep_grappa = DeepGRAPPA(deep_grappa_model, ny=3, n_epochs=1000, lr=3*1e-3, verbose=0, **param)
 
-for name, param in params:
-    deep_grappa = DeepGRAPPA(deep_grappa_model, ny=3, n_epochs=1000, lr=3*1e-3, verbose=0, **param)
+        m = test_model(deep_grappa)
 
-    m = Metrics(METRIC_FUNCS)
+        metrics[name] = (m.means(), m.stddevs())
 
-    for (kspace, mask, smaps), image in tqdm(ds.preprocessed_ds.as_numpy_iterator(), total=n_samples):
-        image_pred = deep_grappa.reconstruct(kspace[..., 0], mask)
-        m.push(image[..., 0], image_pred)
-
-    metrics[name] = (m.means(), m.stddevs())
-
-print(metrics)
+    print(metrics)
