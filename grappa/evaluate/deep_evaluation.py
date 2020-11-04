@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from grappa.deep.deep_grappa import DeepGRAPPA
 
-def test_model(deep_grappa, n_samples=50):
+def test_model(model_fun, model_kwargs, n_samples=50, **kwargs):
     ds = CartesianFastMRIDatasetBuilder(
         dataset='val',
         af=4,
@@ -21,11 +21,14 @@ def test_model(deep_grappa, n_samples=50):
         scale_factor=1e6,
     )
     m = Metrics(METRIC_FUNCS)
-
+    model_kwargs.update(kwargs)
+    deep_grappa = DeepGRAPPA(model_fun, **model_kwargs)
     for (kspace, mask, _), image in tqdm(ds.preprocessed_ds.as_numpy_iterator(), total=n_samples):
         image_pred = deep_grappa.reconstruct(kspace[..., 0], mask)
         m.push(image[..., 0], image_pred)
-
+    print(model_fun.__name__)
+    print(model_kwargs)
+    print(m)
     return m
 
 
@@ -51,9 +54,7 @@ if __name__ == '__main__':
     ]
 
     for name, param in params:
-        deep_grappa = DeepGRAPPA(deep_grappa_model, ny=3, n_epochs=1000, lr=3*1e-3, verbose=0, **param)
-
-        m = test_model(deep_grappa)
+        m = test_model(deep_grappa_model, param)
 
         metrics[name] = (m.means(), m.stddevs())
 
