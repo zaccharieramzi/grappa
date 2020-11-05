@@ -47,7 +47,11 @@ class DeepGRAPPA:
         n_geometries = number_geometries(mask)
         ncoils = kspace.shape[0]
         self.models = [
-            self.model_init_function(ncoils=ncoils, **self.model_kwargs)
+            self.model_init_function(
+                ncoils=ncoils,
+                distance_from_center_feat=self.distance_from_center_feat,
+                **self.model_kwargs,
+            )
             for _ in range(n_geometries)
         ]
         for i_geom, model in enumerate(self.models):
@@ -65,6 +69,7 @@ class DeepGRAPPA:
                     i_geom,
                     mode='calib',
                 )
+                distance = distance.astype(source_values.dtype)
                 X = np.concatenate([source_values, distance[None]])
             else:
                 X = source_values
