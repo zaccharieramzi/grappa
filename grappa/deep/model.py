@@ -10,6 +10,7 @@ class DeepKSpaceFiller(Model):
             n_dense=2,
             instance_normalisation=False,
             kernel_learning=False,
+            distance_from_center_feat=False,
             **kwargs,
         ):
         super().__init__(**kwargs)
@@ -17,10 +18,11 @@ class DeepKSpaceFiller(Model):
         self.n_dense = n_dense
         self.instance_normalisation = instance_normalisation
         self.kernel_learning = kernel_learning
+        self.distance_from_center_feat = distance_from_center_feat
 
-    def build(self, inputs):
+    def build(self, input_shape):
         if self.kernel_learning:
-            n_features = tf.shape(inputs)[-1]
+            n_features = input_shape[-1]
             using_distance_feature = tf.math.mod(n_features, 2)
             n_units = n_features - using_distance_feature
         else:
@@ -52,5 +54,7 @@ class DeepKSpaceFiller(Model):
         if self.kernel_learning:
             batch_size = tf.shape(inputs)[0]
             kernel = tf.reshape(outputs, [batch_size, -1, self.ncoils])
-            outputs = kernel @ inputs
+            if self.distance_from_center_feat:
+                inputs = inputs[:, :-1]
+            outputs = tf.linalg.matvec(kernel, inputs)
         return outputs
