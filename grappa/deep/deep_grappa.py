@@ -146,6 +146,7 @@ class DeepGRAPPA:
                     i_geom,
                     mode='inference',
                 )
+                distance = distance.astype(source_values.dtype)
                 X = np.concatenate([source_values, distance[None]])
             else:
                 X = source_values
