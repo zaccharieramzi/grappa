@@ -6,18 +6,18 @@ from tf_complex.dense import ComplexDense
 class DeepKSpaceFiller(Model):
     def __init__(
             self,
-            n_coils=15,
+            ncoils=15,
             n_dense=2,
             instance_normalisation=False,
             kernel_learning=False,
             **kwargs,
         ):
         super().__init__(**kwargs)
-        self.n_coils = n_coils
+        self.ncoils = ncoils
         self.n_dense = n_dense
         self.instance_normalisation = instance_normalisation
         self.kernel_learning = kernel_learning
-        n_units = self.n_coils**2 if self.kernel_learning else self.n_coils
+        n_units = self.ncoils**2 if self.kernel_learning else self.ncoils
         self.denses = [
             ComplexDense(
                 n_units,
@@ -44,6 +44,6 @@ class DeepKSpaceFiller(Model):
         for dense in self.denses:
             outputs = dense(outputs)
         if self.kernel_learning:
-            kernel = tf.reshape(outputs, [-1, self.n_coils, self.n_coils])
+            kernel = tf.reshape(outputs, [-1, self.ncoils, self.ncoils])
             outputs = kernel @ inputs
         return outputs
