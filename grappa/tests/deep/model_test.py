@@ -18,6 +18,7 @@ kspace = [
     [7, 2, -5],
 ]
 kspace = np.array(kspace)[None, :]
+kspace = kspace.astype(np.complex64)
 
 @pytest.mark.parametrize('n_dense', [2, 3])
 @pytest.mark.parametrize('instance_normalisation', [True, False])
