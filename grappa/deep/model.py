@@ -56,5 +56,5 @@ class DeepKSpaceFiller(Model):
             kernel = tf.reshape(outputs, [batch_size, -1, self.ncoils])
             if self.distance_from_center_feat:
                 inputs = inputs[:, :-1]
-            outputs = tf.linalg.matvec(kernel, inputs)
+            outputs = tf.linalg.matvec(kernel, inputs, transpose_a=True)
         return outputs
