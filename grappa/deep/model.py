@@ -23,7 +23,6 @@ class DeepKSpaceFiller(Model):
                 n_units,
                 use_bias=self.kernel_learning,
                 activation='crelu',
-                dtype=tf.complex64,
             )
             for _ in range(self.n_dense-1)
         ]
@@ -32,7 +31,6 @@ class DeepKSpaceFiller(Model):
                 n_units,
                 use_bias=self.kernel_learning,
                 activation='linear',
-                dtype=tf.complex64,
             )
         )
 

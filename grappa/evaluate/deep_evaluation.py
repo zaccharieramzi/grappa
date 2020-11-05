@@ -34,11 +34,11 @@ def test_model(model_fun, model_kwargs, n_samples=50, **kwargs):
 
 def deep_grappa_model(ncoils=15, n_dense=2):
     dense_layers = [
-        ComplexDense(ncoils, use_bias=False, activation='crelu', dtype=tf.complex64)
+        ComplexDense(ncoils, use_bias=False, activation='crelu')
         for _ in range(n_dense-1)
     ]
     dense_layers.append(
-        ComplexDense(ncoils, use_bias=False, activation='linear', dtype=tf.complex64)
+        ComplexDense(ncoils, use_bias=False, activation='linear')
     )
     model = Sequential(dense_layers)
     return model
