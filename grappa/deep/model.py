@@ -24,10 +24,10 @@ class DeepKSpaceFiller(Model):
             using_distance_feature = tf.math.mod(n_features, 2)
             n_units = n_features - using_distance_feature
         else:
-            n_units = self.ncoils
+            n_units = 1
         self.denses = [
             ComplexDense(
-                n_units,
+                n_units * self.ncoils,
                 use_bias=self.kernel_learning,
                 activation='crelu',
             )
