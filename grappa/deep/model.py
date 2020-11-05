@@ -17,7 +17,14 @@ class DeepKSpaceFiller(Model):
         self.n_dense = n_dense
         self.instance_normalisation = instance_normalisation
         self.kernel_learning = kernel_learning
-        n_units = self.ncoils**2 if self.kernel_learning else self.ncoils
+
+    def build(self, inputs):
+        if self.kernel_learning:
+            n_features = tf.shape(inputs)[-1]
+            using_distance_feature = tf.math.mod(n_features, 2)
+            n_units = n_features - using_distance_feature
+        else:
+            n_units = self.ncoils
         self.denses = [
             ComplexDense(
                 n_units,
@@ -28,7 +35,7 @@ class DeepKSpaceFiller(Model):
         ]
         self.denses.append(
             ComplexDense(
-                n_units,
+                n_units * self.ncoils,
                 use_bias=self.kernel_learning,
                 activation='linear',
             )
@@ -43,6 +50,7 @@ class DeepKSpaceFiller(Model):
         for dense in self.denses:
             outputs = dense(outputs)
         if self.kernel_learning:
-            kernel = tf.reshape(outputs, [-1, self.ncoils, self.ncoils])
+            batch_size = tf.shape(inputs)[0]
+            kernel = tf.reshape(outputs, [batch_size, -1, self.ncoils])
             outputs = kernel @ inputs
         return outputs
