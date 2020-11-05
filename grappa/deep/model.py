@@ -38,8 +38,8 @@ class DeepKSpaceFiller(Model):
 
     def call(self, inputs):
         if self.instance_normalisation:
-            inputs = inputs - tf.reduce_mean(inputs, axis=1)
-            inputs = inputs / tf.reduce_max(tf.abs(inputs), axis=1)
+            inputs = inputs - tf.reduce_mean(inputs, axis=1, keepdims=True)
+            inputs = inputs / tf.reduce_max(tf.abs(inputs), axis=1, keepdims=True)
         outputs = inputs
         for dense in self.denses:
             outputs = dense(outputs)
