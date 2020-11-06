@@ -1,9 +1,10 @@
 import numpy as np
+import tensorflow as tf
 
 from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
-def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6, fastmri=True):
+def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6, fastmri=True, backend='tensorflow'):
     """GRAPPA kernel estimation
 
     Arguments:
@@ -16,12 +17,12 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6, fastmri=True):
     n_geometries = number_geometries(mask)
     ncoils = kspace.shape[0]
     grappa_kernels = [
-        _geometry_kernel_estimation(ac, i_geom, ny, n_geometries, ncoils, lamda=lamda)
+        _geometry_kernel_estimation(ac, i_geom, ny, n_geometries, ncoils, lamda=lamda, backend=backend)
         for i_geom in range(n_geometries)
     ]
     return grappa_kernels
 
-def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lamda=1e-6):
+def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lamda=1e-6, backend='tensorflow'):
     target_values, source_values = list_target_source_values_for_estimation(
         ac=ac,
         i_geom=i_geom,
@@ -32,8 +33,19 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     # taken from
     # https://users.fmrib.ox.ac.uk/~mchiew/Teaching.html
     regularizer = lamda*np.linalg.norm(source_values)*np.eye(source_values.shape[0])
-    regualrized_inverted_sources = np.linalg.pinv(source_values @ source_values.conj().T + regularizer)
-    grappa_kernel = target_values @ source_values.conj().T @ regualrized_inverted_sources
+    if backend == 'tensorflow':
+        source_values = tf.constant(source_values)
+        source_values_conj_t = tf.transpose(tf.math.conj(source_values))
+        regularizer = tf.constant(regularizer)
+        target_values = tf.constant(target_values)
+        regularized_inverted_sources = tf.linalg.pinv(
+            source_values @ source_values_conj_t + regularizer
+        )
+        grappa_kernel = target_values @ source_values_conj_t @ regularized_inverted_sources
+        grappa_kernel = grappa_kernel.numpy()
+    else:
+        regularized_inverted_sources = np.linalg.pinv(source_values @ source_values.conj().T + regularizer)
+        grappa_kernel = target_values @ source_values.conj().T @ regularized_inverted_sources
     return grappa_kernel
 
 def list_target_source_values_for_estimation(ac, i_geom, ny, n_geometries, ncoils):
