@@ -3,7 +3,7 @@ import numpy as np
 from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
-def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6):
+def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6, fastmri=True):
     """GRAPPA kernel estimation
 
     Arguments:
@@ -12,7 +12,7 @@ def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6):
     """
     if mask is None:
         raise ValueError('For now mask has to be passed for kernel estimation')
-    ac = autocalibration_signal(kspace, mask, af)
+    ac = autocalibration_signal(kspace, mask, af, fastmri=fastmri)
     n_geometries = number_geometries(mask)
     ncoils = kspace.shape[0]
     grappa_kernels = [
@@ -61,10 +61,27 @@ def list_target_source_values_for_estimation(ac, i_geom, ny, n_geometries, ncoil
     source_values = np.array(source_values)
     return target_values, source_values
 
-def autocalibration_signal(kspace, mask, af=4):
+def _autocalibration_signal_fastmri(kspace, mask, af=4):
     center_fraction = (32//af) / 100
     num_low_freqs = int(np.round(mask.shape[-1] * center_fraction))
     ac_center = mask.shape[-1] // 2
     ac_slice = slice(ac_center - num_low_freqs//2, ac_center + num_low_freqs//2)
     ac = kspace[..., ac_slice]
     return ac
+
+def _autocalibration_indices(mask):
+    mask_diff = np.abs(mask[1:] - mask[:-1])
+    ac_inf = np.argmin(mask_diff)
+    ac_sup = np.argmax(mask_diff)
+
+    return ac_inf, ac_sup
+def _autocalibration_signal_general(kspace, mask):
+    ac_inf, ac_sup = _autocalibration_indices(mask)
+    ac = kspace[..., ac_inf:ac_sup]
+    return ac
+
+def autocalibration_signal(kspace, mask, af=4, fastmri=True):
+    if fastmri:
+        return _autocalibration_signal_fastmri(kspace, mask, af=af)
+    else:
+        return _autocalibration_signal_general(kspace, mask)
