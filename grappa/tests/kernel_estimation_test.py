@@ -53,7 +53,7 @@ def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel, b
         lamda=1e-8,
         backend=backend,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=4)
 
 @pytest.mark.parametrize('ac, ny, i_geom, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct sampled neighbours
@@ -107,7 +107,7 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
         lamda=1e-8,
         backend=backend,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=4)
 
 @pytest.mark.parametrize('ac, ny, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct neighbours
