@@ -1,9 +1,10 @@
 import numpy as np
+import tensorflow as tf
 
 from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
 
 
-def apply_kernel(kspace, mask, grappa_kernels):
+def apply_kernel(kspace, mask, grappa_kernels, backend='tensorflow'):
     if mask is None:
         raise ValueError('For now mask has to be passed for kernel estimation')
     ncoils = kspace.shape[0]
@@ -26,6 +27,7 @@ def apply_kernel(kspace, mask, grappa_kernels):
             spacing,
             ny,
             ncoils,
+            backend=backend,
         )
     crop_right_readout = kspace_padded.shape[-1] - pad_right
     crop_right_phase = kspace_padded.shape[-2] - (ny//2)
@@ -33,7 +35,7 @@ def apply_kernel(kspace, mask, grappa_kernels):
     kspace_consistent = mask * kspace + (1-mask) * kspace_cropped
     return kspace_consistent
 
-def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15):
+def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15, backend='tensorflow'):
     targets, sources = list_targets_sources_for_application(
         kspace=kspace,
         ny=ny,
@@ -42,7 +44,10 @@ def _geom_apply_kernel(kspace, grappa_kernel, i_geom, spacing=4, ny=3, ncoils=15
         ncoils=ncoils,
     )
     source_values = eval_at_positions(kspace, sources)
-    target_values = grappa_kernel @ source_values
+    if backend == 'tensorflow':
+        target_values = tf.constant(grappa_kernel) @ tf.constant(source_values)
+    else:
+        target_values = grappa_kernel @ source_values
     inference_on_target_positions(kspace, targets, target_values, ncoils=ncoils)
 
 def inference_on_target_positions(kspace, targets, target_values, ncoils):
