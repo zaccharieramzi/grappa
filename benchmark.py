@@ -12,7 +12,7 @@ ncoils = 15
 num_grappa = 20
 
 # Data generation
-kspace = np.random.normal([ncoils, dim, dim]).astype(np.complex64)
+kspace = np.random.normal(size=[ncoils, dim, dim]).astype(np.complex64)
 mask = np.array([
     i%R == 0 for i in range(dim)
 ])
