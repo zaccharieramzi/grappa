@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries
+from grappa.utils import cartesian_product, sources_from_targets, eval_at_positions, number_geometries, pinv
 
 
 def kernel_estimation(kspace, mask=None, af=4, ny=3, lamda=1e-6, fastmri=True, backend='tensorflow'):
@@ -36,17 +36,16 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     source_values_conj_t = source_values.conj().T
     # we have to do the pinv in np because of
     # https://github.com/tensorflow/tensorflow/issues/44658
-    regularized_inverted_sources = np.linalg.pinv(source_values @ source_values_conj_t + regularizer)
     if backend == 'tensorflow':
+        regularizer = tf.constant(regularizer, dtype=source_values.dtype)
+        source_values = tf.constant(source_values)
         source_values_conj_t = tf.constant(source_values_conj_t)
         target_values = tf.constant(target_values)
-        regularized_inverted_sources = tf.constant(
-            regularized_inverted_sources,
-            dtype=source_values_conj_t.dtype,
-        )
+        regularized_inverted_sources = pinv(source_values @ source_values_conj_t + regularizer, rcond=1e-12)
         grappa_kernel = target_values @ source_values_conj_t @ regularized_inverted_sources
         grappa_kernel = grappa_kernel.numpy()
     else:
+        regularized_inverted_sources = np.linalg.pinv(source_values @ source_values_conj_t + regularizer)
         grappa_kernel = target_values @ source_values_conj_t @ regularized_inverted_sources
     return grappa_kernel
 
