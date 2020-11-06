@@ -42,8 +42,8 @@ class DeepGRAPPA:
         self.logging_history = logging_history
         self.models = None
 
-    def calibrate_models(self, kspace, mask=None, af=4):
-        ac = autocalibration_signal(kspace, mask, af)
+    def calibrate_models(self, kspace, mask=None, af=4, fastmri=True):
+        ac = autocalibration_signal(kspace, mask, af, fastmri=fastmri)
         n_geometries = number_geometries(mask)
         ncoils = kspace.shape[0]
         self.models = [
@@ -158,10 +158,10 @@ class DeepGRAPPA:
         kspace_consistent = mask * kspace + (1-mask) * kspace_cropped
         return kspace_consistent
 
-    def reconstruct(self, kspace, mask, af=4, output_shape=None):
+    def reconstruct(self, kspace, mask, af=4, output_shape=None, fastmri=True):
         reco_slices = list()
         for kspace_slice, mask_slice in zip(kspace, mask):
-            self.calibrate_models(kspace_slice, mask_slice, af=af)
+            self.calibrate_models(kspace_slice, mask_slice, af=af, fastmri=fastmri)
             filled_kspace = self.apply_models(kspace_slice, mask_slice)
             reco_grappa = rss(filled_kspace)
             reco_slice = crop(reco_grappa, output_shape=output_shape)
