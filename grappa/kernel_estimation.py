@@ -34,6 +34,8 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     # https://users.fmrib.ox.ac.uk/~mchiew/Teaching.html
     regularizer = lamda*np.linalg.norm(source_values)*np.eye(source_values.shape[0])
     source_values_conj_t = source_values.conj().T
+    # we have to do the pinv in np because of
+    # https://github.com/tensorflow/tensorflow/issues/44658
     regularized_inverted_sources = np.linalg.pinv(source_values @ source_values_conj_t + regularizer)
     if backend == 'tensorflow':
         source_values_conj_t = tf.constant(source_values_conj_t)
