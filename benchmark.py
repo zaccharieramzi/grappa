@@ -7,9 +7,9 @@ from grappa.reconstruction import slice_reconstruction
 
 # Benchmark params
 R = 4
-readout_dim = 512
-phase_dim = 256
-ncoils = 15
+readout_dim = 768 * 2
+phase_dim = 768
+ncoils = 32
 num_grappa = 20
 
 # Data generation
