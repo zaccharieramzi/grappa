@@ -72,7 +72,10 @@ def _autocalibration_signal_fastmri(kspace, mask, af=4):
 def _autocalibration_indices(mask):
     mask_int = np.array(mask).astype(np.int)
     mask_diff = np.abs(mask_int[1:] - mask_int[:-1])
-    ac_indexes = np.where(mask_diff == 0)[0]
+    ac_indexes = np.where(np.logical_and(
+        mask_diff == 0,
+        mask_int[:-1] == 1,
+    ))[0]
     ac_inf = min(ac_indexes)
     ac_sup = max(ac_indexes) + 1
     return ac_inf, ac_sup
