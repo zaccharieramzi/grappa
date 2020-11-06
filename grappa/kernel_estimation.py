@@ -40,7 +40,10 @@ def _geometry_kernel_estimation(ac, i_geom, ny=3, n_geometries=4, ncoils=15, lam
     if backend == 'tensorflow':
         source_values_conj_t = tf.constant(source_values_conj_t)
         target_values = tf.constant(target_values)
-        regularized_inverted_sources = tf.constant(regularized_inverted_sources)
+        regularized_inverted_sources = tf.constant(
+            regularized_inverted_sources,
+            dtype=source_values_conj_t.dtype,
+        )
         grappa_kernel = target_values @ source_values_conj_t @ regularized_inverted_sources
         grappa_kernel = grappa_kernel.numpy()
     else:
