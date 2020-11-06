@@ -42,8 +42,8 @@ from grappa.kernel_estimation import _geometry_kernel_estimation
 ])
 @pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
 def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel, backend):
-    ac = np.array(ac)[None, :]
-    expected_kernel = np.array(expected_kernel)
+    ac = np.array(ac)[None, :].astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=0,
@@ -96,8 +96,8 @@ def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel, b
 ])
 @pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
 def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_kernel, backend):
-    ac = np.array(ac)[None, :]
-    expected_kernel = np.array(expected_kernel)
+    ac = np.array(ac)[None, :].astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=i_geom,
@@ -169,8 +169,8 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
 ])
 @pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
 def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel, backend):
-    ac = np.array(ac)
-    expected_kernel = np.array(expected_kernel)
+    ac = np.array(ac).astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=0,
@@ -207,8 +207,8 @@ def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel, ba
 ])
 @pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
 def test_geometry_kernel_estimation_multicoil_double(ac, ny, i_geom, expected_kernel, backend):
-    ac = np.array(ac)
-    expected_kernel = np.array(expected_kernel)
+    ac = np.array(ac).astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=i_geom,
