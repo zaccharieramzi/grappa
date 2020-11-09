@@ -57,7 +57,7 @@ def list_target_source_values_for_estimation(ac, i_geom, ny, n_geometries, ncoil
         np.arange(i_geom + 1, ac.shape[2] - n_geometries + i_geom),
     )
     target_values = [
-        np.take(ac[c], np.ravel_multi_index(targets.T, ac[c].shape))
+        np.take(np.copy(ac[c]), np.ravel_multi_index(targets.T, ac[c].shape))
         for c in range(ncoils)
     ]
     target_values = np.array(target_values)
@@ -79,7 +79,7 @@ def _autocalibration_signal_fastmri(kspace, mask, af=4):
     num_low_freqs = int(np.round(mask.shape[-1] * center_fraction))
     ac_center = mask.shape[-1] // 2
     ac_slice = slice(ac_center - num_low_freqs//2, ac_center + num_low_freqs//2)
-    ac = kspace[..., ac_slice]
+    ac = np.copy(kspace[..., ac_slice])
     return ac
 
 def _autocalibration_indices(mask):
@@ -95,7 +95,7 @@ def _autocalibration_indices(mask):
 
 def _autocalibration_signal_general(kspace, mask):
     ac_inf, ac_sup = _autocalibration_indices(mask)
-    ac = kspace[..., ac_inf:ac_sup+1]
+    ac = np.copy(kspace[..., ac_inf:ac_sup+1])
     return ac
 
 def autocalibration_signal(kspace, mask, af=4, fastmri=True):
