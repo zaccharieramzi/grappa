@@ -40,9 +40,10 @@ from grappa.kernel_estimation import _geometry_kernel_estimation
         [[1, 1j]],
     ),
 ])
-def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
-    ac = np.array(ac)[None, :]
-    expected_kernel = np.array(expected_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel, backend):
+    ac = np.array(ac)[None, :].astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=0,
@@ -50,8 +51,9 @@ def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
         n_geometries=1,
         ncoils=1,
         lamda=1e-8,
+        backend=backend,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=4)
 
 @pytest.mark.parametrize('ac, ny, i_geom, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct sampled neighbours
@@ -92,9 +94,10 @@ def test_geometry_kernel_estimation_singlecoil_simple(ac, ny, expected_kernel):
         [[0, 0, 1, 1, 0, 0]],
     )
 ])
-def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_kernel):
-    ac = np.array(ac)[None, :]
-    expected_kernel = np.array(expected_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_kernel, backend):
+    ac = np.array(ac)[None, :].astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=i_geom,
@@ -102,8 +105,9 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
         n_geometries=2,
         ncoils=1,
         lamda=1e-8,
+        backend=backend,
     )
-    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=5)
+    np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=4)
 
 @pytest.mark.parametrize('ac, ny, expected_kernel', [
     (  # first basic example with a kernel using only the 2 direct neighbours
@@ -163,9 +167,10 @@ def test_geometry_kernel_estimation_singlecoil_double(ac, ny, i_geom, expected_k
         ],
     )
 ])
-def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel):
-    ac = np.array(ac)
-    expected_kernel = np.array(expected_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel, backend):
+    ac = np.array(ac).astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=0,
@@ -173,6 +178,7 @@ def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel):
         n_geometries=1,
         ncoils=2,
         lamda=1e-6,
+        backend=backend,
     )
     np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=3)
 
@@ -199,14 +205,16 @@ def test_geometry_kernel_estimation_multicoil_simple(ac, ny, expected_kernel):
         [[1, 1, 0, 0], [-1, -1, 0, 0]],
     ),
 ])
-def test_geometry_kernel_estimation_multicoil_double(ac, ny, i_geom, expected_kernel):
-    ac = np.array(ac)
-    expected_kernel = np.array(expected_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_geometry_kernel_estimation_multicoil_double(ac, ny, i_geom, expected_kernel, backend):
+    ac = np.array(ac).astype(np.complex64)
+    expected_kernel = np.array(expected_kernel).astype(np.complex64)
     grappa_kernel = _geometry_kernel_estimation(
         ac,
         i_geom=i_geom,
         ny=ny,
         n_geometries=2,
         ncoils=2,
+        backend=backend,
     )
     np.testing.assert_array_almost_equal(expected_kernel, grappa_kernel, decimal=3)

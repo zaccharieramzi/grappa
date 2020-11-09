@@ -31,22 +31,46 @@ def crop(image, output_shape=None):
     ]
     return image_cropped
 
-def fastmri_slice_reconstruction(kspace, mask, ny=3, output_shape=None, lamda=1e-6):
-    grappa_kernels = kernel_estimation(kspace, mask, ny=ny, lamda=lamda)
-    filled_kspace = apply_kernel(kspace, mask, grappa_kernels)
+def slice_reconstruction(
+        kspace,
+        mask,
+        ny=3,
+        output_shape=None,
+        lamda=1e-6,
+        fastmri=True,
+        backend='tensorflow',
+    ):
+    grappa_kernels = kernel_estimation(
+        kspace,
+        mask,
+        ny=ny,
+        lamda=lamda,
+        fastmri=fastmri,
+        backend=backend,
+    )
+    filled_kspace = apply_kernel(kspace, mask, grappa_kernels, backend=backend)
     reco_grappa = rss(filled_kspace)
     reco_grappa_cropped = crop(reco_grappa, output_shape=output_shape)
     return reco_grappa_cropped
 
-def fastmri_volume_reconstruction(kspace, mask, ny=3, output_shape=None, lamda=1e-6):
+def fastmri_volume_reconstruction(
+        kspace,
+        mask,
+        ny=3,
+        output_shape=None,
+        lamda=1e-6,
+        backend='tensorflow',
+    ):
     reco_slices = list()
     for kspace_slice, mask_slice in zip(kspace, mask):
-        reco_slice = fastmri_slice_reconstruction(
+        reco_slice = slice_reconstruction(
             kspace_slice,
             mask_slice,
             ny=ny,
             output_shape=output_shape,
             lamda=lamda,
+            fastmri=True,
+            backend=backend
         )
         reco_slices.append(reco_slice)
     reco_slices = np.array(reco_slices)

@@ -32,10 +32,11 @@ from grappa.kernel_application import _geom_apply_kernel, apply_kernel
         ],
     )
 ])
-def test_geom_apply_kernel(kspace, grappa_kernel, expected_kspace):
-    kspace = np.array(kspace)[None, :]
-    expected_kspace = np.array(expected_kspace)[None, :]
-    grappa_kernel = np.array(grappa_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_geom_apply_kernel(kspace, grappa_kernel, expected_kspace, backend):
+    kspace = np.array(kspace)[None, :].astype(np.complex64)
+    expected_kspace = np.array(expected_kspace)[None, :].astype(np.complex64)
+    grappa_kernel = np.array(grappa_kernel).astype(np.complex64)
     ny = grappa_kernel.size // 2
     _geom_apply_kernel(
         kspace,
@@ -44,6 +45,7 @@ def test_geom_apply_kernel(kspace, grappa_kernel, expected_kspace):
         1,
         ny,
         1,
+        backend=backend,
     )
     np.testing.assert_array_almost_equal(expected_kspace, kspace)
 
@@ -75,11 +77,12 @@ def test_geom_apply_kernel(kspace, grappa_kernel, expected_kspace):
         ],
     )
 ])
-def test_apply_kernel(kspace, grappa_kernel, expected_kspace):
-    mask = np.array([1, 0, 1])[None, None, : ]
-    kspace = np.array(kspace)[None, :]
-    expected_kspace = np.array(expected_kspace)[None, :]
-    grappa_kernel = np.array(grappa_kernel)
+@pytest.mark.parametrize('backend', ['tensorflow', 'numpy'])
+def test_apply_kernel(kspace, grappa_kernel, expected_kspace, backend):
+    mask = np.array([1, 0, 1])[None, None, : ].astype(np.complex64)
+    kspace = np.array(kspace)[None, :].astype(np.complex64)
+    expected_kspace = np.array(expected_kspace)[None, :].astype(np.complex64)
+    grappa_kernel = np.array(grappa_kernel).astype(np.complex64)
     grappa_kernels = [grappa_kernel]
-    kspace = apply_kernel(kspace, mask, grappa_kernels)
+    kspace = apply_kernel(kspace, mask, grappa_kernels, backend=backend)
     np.testing.assert_array_almost_equal(expected_kspace, kspace)
